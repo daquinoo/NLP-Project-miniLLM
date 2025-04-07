@@ -1,4 +1,3 @@
-# Training Setup for Llama-3.2-3B with LoRA Fine-tuning
 import os
 import torch
 from datasets import Dataset
@@ -18,12 +17,10 @@ from peft import (
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score
-
-# ---------- ADDITIONAL IMPORTS FOR EVALUATION AND DPO ----------
-# from evaluate import load
-# import evaluate
-# from transformers import EarlyStoppingCallback, TrainerCallback
-# from peft import PeftModel
+from evaluate import load
+import evaluate
+from transformers import EarlyStoppingCallback, TrainerCallback
+from peft import PeftModel
 # from trl import DPOTrainer  # For Direct Preference Optimization
 
 # Load preprocessed data
