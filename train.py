@@ -131,7 +131,7 @@ def prepare_datasets(train_df, test_df):
     return train_dataset, test_dataset
 
 # ---------- EVAL METRICS SETUP ----------
-# This is where you would implement the evaluation metrics (Daniel, Nilay, SJ)
+# This is where you would implement the evaluation metrics (SJ)
 # def compute_metrics(eval_preds):
 #     """
 #     Compute ROUGE, BERTScore, and perplexity.
@@ -201,7 +201,7 @@ def get_training_args():
         # early_stopping_threshold=0.01,  # Default min improvement needed to consider as improvement
     )
 
-# 10. Main training function
+# Main training function
 def train():
     # Prepare datasets
     train_dataset, test_dataset = prepare_datasets(train_df, test_df)
