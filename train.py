@@ -213,14 +213,11 @@ def train():
     # Set up callbacks
     # callbacks = [
     #     EarlyStoppingCallback(
-    #         early_stopping_patience=3,
-    #         early_stopping_threshold=0.01
+    #         ...
     #     ),
-    #     # Select a few examples for tracking inference during training
+    #     # Select examples for tracking inference during training
     #     InferenceCallback(
-    #         validation_examples=test_dataset.select(range(5)),
-    #         tokenizer=tokenizer,
-    #         log_steps=500
+    #         ...
     #     )
     # ]
     
