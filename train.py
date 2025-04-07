@@ -21,11 +21,14 @@ from evaluate import load
 import evaluate
 from transformers import EarlyStoppingCallback, TrainerCallback
 from peft import PeftModel
+#
+import nltk
+nltk.download('punkt')
 # from trl import DPOTrainer  # For Direct Preference Optimization
 
 # Load preprocessed data
-train_df = pd.read_csv("train_data.csv")  
-test_df = pd.read_csv("test_data.csv")
+#train_df = pd.read_csv("train_data.csv")  
+#test_df = pd.read_csv("test_data.csv")
 
 # ---------- ADDITIONAL DATA PREPARATION FOR DPO ----------
 # Here you would prepare paired preference data for DPO training
@@ -129,22 +132,67 @@ def prepare_datasets(train_df, test_df):
 
 # ---------- EVAL METRICS SETUP ----------
 # This is where you would implement the evaluation metrics (SJ)
-# def compute_metrics(eval_preds):
-#     """
-#     Compute ROUGE, BERTScore, and perplexity.
-#     """
-      #Implement here
-#     ...
-#     
-#     metrics = {
-#         "rouge1": rouge_result["rouge1"],
-#         "rouge2": rouge_result["rouge2"],
-#         "rougeL": rouge_result["rougeL"],
-#         "bertscore_f1": np.mean(bertscore_result["f1"]),
-#         # "perplexity": perplexity
-#     }
-#     
-#     return metrics
+from nltk.translate.bleu_score import sentence_bleu
+from nltk.tokenize import word_tokenize
+def compute_metrics(eval_preds):
+    """
+    Compute ROUGE, BLEU, BERTScore, and (optionally) Perplexity.
+    """
+    predictions, labels = eval_preds
+
+    # Convert tokens to text if needed
+    if isinstance(predictions[0], list):  # If tokenized
+        predictions = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+    if isinstance(labels[0], list):
+        labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+    predictions = [pred.strip() for pred in predictions]
+    labels = [label.strip() for label in labels]
+
+    # ROUGE
+    rouge = evaluate.load("rouge")
+    rouge_result = rouge.compute(predictions=predictions, references=labels)
+
+    # BLEU (simplified using sentence BLEU)
+    bleu_scores = [
+        sentence_bleu([word_tokenize(label)], word_tokenize(pred))
+        for pred, label in zip(predictions, labels)
+    ]
+    avg_bleu = np.mean(bleu_scores)
+
+    # BERTScore
+    bertscore = evaluate.load("bertscore")
+    bertscore_result = bertscore.compute(predictions=predictions, references=labels, lang="en")
+
+    metrics = {
+        "bleu": avg_bleu,
+        "rouge1": rouge_result["rouge1"],
+        "rouge2": rouge_result["rouge2"],
+        "rougeL": rouge_result["rougeL"],
+        "bertscore_f1": np.mean(bertscore_result["f1"]),
+        # Optional: add perplexity if tracking via eval loss externally
+    }
+
+    return metrics
+
+if __name__ == "__main__":
+    # TEST ONLY: Evaluate metrics function without loading full train_df
+    from types import SimpleNamespace
+
+    dummy_preds = ["The weather is nice today.", "The cat is on the mat."]
+    dummy_labels = ["It's a nice day outside.", "The cat sat on the mat."]
+
+    class DummyEvalPreds(SimpleNamespace):
+        def __iter__(self):
+            return iter((self.predictions, self.label_ids))
+
+    dummy = DummyEvalPreds(predictions=dummy_preds, label_ids=dummy_labels)
+
+    metrics = compute_metrics(dummy)
+    print("\n=== Evaluation Metrics ===")
+    for key, value in metrics.items():
+        print(f"{key}: {value:.4f}")
+
 
 # ---------- INFERENCE CALLBACK FOR VALIDATION EXAMPLES ----------
 # Implement a callback for periodic inference on held-out examples
