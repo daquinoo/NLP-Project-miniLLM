@@ -302,18 +302,6 @@ def train():
     # Get training arguments
     training_args = get_training_args()
     
-    # ---------- CALLBACKS FOR MONITORING AND EARLY STOPPING ----------
-    # Set up callbacks
-    # callbacks = [
-    #     EarlyStoppingCallback(
-    #         ...
-    #     ),
-    #     # Select examples for tracking inference during training
-    #     InferenceCallback(
-    #         ...
-    #     )
-    # ]
-    
     # ---------- SAMPLE PROMPTS FOR INFERENCE CALLBACK ----------
     # These are fixed input prompts used by InferenceCallback to monitor the model's
     # qualitative performance during training. They cover a variety of task types.
