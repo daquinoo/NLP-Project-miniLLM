@@ -195,20 +195,48 @@ if __name__ == "__main__":
 
 
 # ---------- INFERENCE CALLBACK FOR VALIDATION EXAMPLES ----------
-# Implement a callback for periodic inference on held-out examples
-# class InferenceCallback(TrainerCallback):
-#     """
-#     Callback to run inference on a few examples during training
-#     and log the results to tensorboard/wandb.
-#     """
-#     def __init__(self, validation_examples, tokenizer, log_steps=1000):
-#         self.validation_examples = validation_examples
-#         self.tokenizer = tokenizer
-#         self.log_steps = log_steps
-#         
-#     ...
-#             
-#     return control
+# Implement a callback for periodic inference on held-out 
+# NP-4/7/2025
+class InferenceCallback(TrainerCallback):
+    """
+        Args:
+            tokenizer: The tokenizer used to prepare input for the model.
+            val_texts: A list of sample input prompts for qualitative evaluation.
+            log_steps: How often (in steps) to run inference and print results.
+    """
+    def __init__(self, tokenizer, val_texts, log_steps=500):
+        self.tokenizer = tokenizer
+        self.val_texts = val_texts  # List of sample validation prompts
+        self.log_steps = log_steps
+        
+    
+    """
+        Called at the end of each training step. If the step number matches log_steps,
+        this runs inference on the sample prompts and prints model outputs.
+    """
+    def on_step_end(self, args, state, control, **kwargs):
+        if state.global_step % self.log_steps == 0 and state.global_step > 0:
+            model = kwargs["model"]
+
+            # Ensure compatibility with available device
+            device = model.device if torch.cuda.is_available() else "cpu"
+            model.eval()
+
+            print(f"\n--- Inference at step {state.global_step} ---")
+            with torch.no_grad(): # Disable gradient computation
+                for i, prompt in enumerate(self.val_texts):
+                    # Tokenize and move input to correct device
+                    inputs = self.tokenizer(prompt, return_tensors="pt").to(device)
+
+                    # Generate output tokens
+                    outputs = model.generate(**inputs, max_new_tokens=50)
+
+                    # Decode and print the generated text
+                    decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+                    print(f"Prompt {i+1}: {prompt}")
+                    print(f"Output {i+1}: {decoded}")
+                    print("---")
+
 
 # ---------- HUMAN EVALUATION INTERFACE SETUP ----------
 # Would typically be a separate script
@@ -227,7 +255,7 @@ def get_training_args():
         save_steps=500,                 # Save every 500 steps
         save_total_limit=3,             # Keep only the 3 most recent checkpoint
         # ---------- LEARNING RATE MODIFICATION (Nilay) ----------
-        # learning_rate=2e-4,           # Learning rate - typically higher for LoRA fine-tuning, change from default (2e-4) to whichever is preferred (1e-5 to 5e-5, or otherwise)
+        learning_rate=2e-5,           # Learning rate - typically higher for LoRA fine-tuning, change from default (2e-4) to whichever is preferred (1e-5 to 5e-5, or otherwise)
         weight_decay=0.01,              # Weight decay for regularization
         warmup_ratio=0.03,              # Percentage of steps for warmup
         lr_scheduler_type="cosine",     # Learning rate scheduler
@@ -244,7 +272,22 @@ def get_training_args():
         # Add early stopping parameters, examples below
         # early_stopping_patience=3,    # Default stop after 3 evaluations with no improvement
         # early_stopping_threshold=0.01,  # Default min improvement needed to consider as improvement
+        # addressing above comments - threshold is not supported by TrainingArguments, created a method for patience (get_callbacks) which 
+        # will be passed in the trainer - NP-4/7/2025
     )
+    
+# Define callbacks including early stopping NP- 4/7/2025
+# Returns a list of Trainer callbacks including:
+# - EarlyStoppingCallback: stops training if no improvement in eval loss
+# - InferenceCallback (optional): logs model outputs on sample prompts during training
+def get_callbacks(tokenizer=None, val_texts=None):
+    callbacks = [EarlyStoppingCallback(early_stopping_patience=3)] # stop if no improvelemt for 3 evals
+    
+    # If sample prompts and tokenizer are provided, add inference logging
+    if tokenizer and val_texts:
+        callbacks.append(InferenceCallback(tokenizer, val_texts, log_steps=500))
+    return callbacks
+
 
 # Main training function
 def train():
@@ -269,6 +312,17 @@ def train():
     #     )
     # ]
     
+    # ---------- SAMPLE PROMPTS FOR INFERENCE CALLBACK ----------
+    # These are fixed input prompts used by InferenceCallback to monitor the model's
+    # qualitative performance during training. They cover a variety of task types.
+    val_examples = [
+        "Translate to French: The book is on the table.",
+        "Summarize: Alice went to the store and bought apples, oranges, and bananas.",
+        "Write a poem about the moon.",
+        "Explain what a black hole is.",
+        "Convert the temperature from Celsius to Fahrenheit: 20°C."
+    ]
+    
     # Initialize trainer
     trainer = Trainer(
         model=model,
@@ -278,8 +332,8 @@ def train():
         tokenizer=tokenizer,
         data_collator=DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False),
         # ---------- ADD EVALUATION METRICS AND CALLBACKS ----------
-        # compute_metrics=compute_metrics,  # Add the evaluation metrics
-        # callbacks=callbacks,  # Add callbacks for early stopping and inference
+        compute_metrics=compute_metrics,  # Add the evaluation metrics
+        callbacks=get_callbacks(tokenizer, val_examples),  # Add callbacks for early stopping and inference
     )
     
     # Start training
