@@ -163,6 +163,8 @@ def compute_metrics(eval_preds):
     # BERTScore
     bertscore = evaluate.load("bertscore")
     bertscore_result = bertscore.compute(predictions=predictions, references=labels, lang="en")
+    
+    # perplexity
 
     metrics = {
         "bleu": avg_bleu,
