@@ -1,4 +1,5 @@
 import os
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 import torch
 from datasets import Dataset, load_dataset
 from transformers import (
@@ -95,6 +96,8 @@ def prepare_model():
     
     # Prepare model for LoRA fine-tuning
     print("Preparing model for LoRA fine-tuning...")
+    # Enable gradient checkpointing to reduce memory usage
+    model.gradient_checkpointing_enable()
     model = prepare_model_for_kbit_training(model)
     model = get_peft_model(model, lora_config)
     
