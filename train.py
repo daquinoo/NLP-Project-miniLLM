@@ -1,6 +1,6 @@
 import os
 import torch
-from datasets import Dataset
+from datasets import Dataset, load_dataset
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -26,9 +26,39 @@ import nltk
 nltk.download('punkt')
 # from trl import DPOTrainer  # For Direct Preference Optimization
 
+ds = load_dataset("tatsu-lab/alpaca")
+# remove duplicates
+text_df = pd.DataFrame(ds)
+train_df.to_csv("train_data.csv", index=False)
+test_df.to_csv("test_data.csv", index=False)
+
+print("Saved preprocessed data to CSV files")
+text_df.head(5)
+text_df = text_df['train'].apply(pd.Series)
+print("Size of original dataset: " + str(text_df.size))
+text_df = text_df.drop("text", axis = 1)
+# remove lines where input OR output is empty
+text_df = text_df.replace('', None).dropna(subset=['instruction', 'output'])
+text_df = text_df.drop_duplicates()
+print("Size of dataset after removing duplicates and empty input/output: " + str(text_df.size))
+text_df.head(5)
+# format to input - output pairst
+# include instruction, context, response
+# input = instruction column
+# context = input column
+# response = output column
+text_df = text_df.rename(columns={'instruction': 'instruction', 'input': 'context', 'output': 'response'})
+text_df.head(5)
+# 80 - 20 random validation split
+train_df, test_df = train_test_split(text_df, test_size=0.2, random_state=52)
+print("Size of train dataset: " + str(train_df.size))
+print("Size of test dataset: " + str(test_df.size))
+train_df.to_csv("train_data.csv", index=False)
+test_df.to_csv("test_data.csv", index=False)
+print("Saved preprocessed data to CSV files")
 # Load preprocessed data
-#train_df = pd.read_csv("train_data.csv")  
-#test_df = pd.read_csv("test_data.csv")
+train_df = pd.read_csv("train_data.csv")  
+test_df = pd.read_csv("test_data.csv")
 
 # ---------- ADDITIONAL DATA PREPARATION FOR DPO ----------
 # Here you would prepare paired preference data for DPO training
