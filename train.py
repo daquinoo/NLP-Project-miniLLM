@@ -29,10 +29,6 @@ nltk.download('punkt')
 ds = load_dataset("tatsu-lab/alpaca")
 # remove duplicates
 text_df = pd.DataFrame(ds)
-train_df.to_csv("train_data.csv", index=False)
-test_df.to_csv("test_data.csv", index=False)
-
-print("Saved preprocessed data to CSV files")
 text_df.head(5)
 text_df = text_df['train'].apply(pd.Series)
 print("Size of original dataset: " + str(text_df.size))
