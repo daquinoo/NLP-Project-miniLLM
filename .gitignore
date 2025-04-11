@@ -1,0 +1,7 @@
+.env
+__pycache__/
+/output
+preprocessing.ipynb
+test_data.csv
+train_data.csv
+llama3-tune.sif
