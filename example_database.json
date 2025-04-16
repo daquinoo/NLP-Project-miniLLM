@@ -60,7 +60,7 @@
     "instruction_type": "summarization",
     "instruction": "Summarize Newton's three laws of motion.",
     "input": "",
-    "response": "1) Objects stay at rest or move uniformly unless acted on. 2) Force = mass \u00d7 acceleration. 3) Every action has an equal and opposite reaction."
+    "response": "1) Objects stay at rest or move uniformly unless acted on. 2) Force = mass * acceleration. 3) Every action has an equal and opposite reaction."
   },
   {
     "topic": "science",
