@@ -1,177 +1,149 @@
 [
   {
-    "topic": "creative",
+    "topic": "factual_qa",
     "instruction_type": "factual",
-    "instruction": "Who painted the Mona Lisa?",
+    "instruction": "What is the capital of Canada?",
     "input": "",
-    "response": "The Mona Lisa was painted by Leonardo da Vinci."
+    "response": "The capital of Canada is Ottawa."
   },
   {
-    "topic": "creative",
-    "instruction_type": "creative",
-    "instruction": "Write a short story about a talking tree in a magical forest.",
-    "input": "",
-    "response": "In the heart of the Whispering Woods, a tree named Elowen had stood for centuries, sharing ancient secrets with lost travelers."
-  },
-  {
-    "topic": "creative",
-    "instruction_type": "reasoning",
-    "instruction": "Why do people connect emotionally with fictional characters?",
-    "input": "",
-    "response": "Fictional characters often reflect real human experiences and emotions, allowing people to see parts of themselves or others in the story."
-  },
-  {
-    "topic": "creative",
-    "instruction_type": "summarization",
-    "instruction": "Summarize the plot of 'Alice in Wonderland'.",
-    "input": "",
-    "response": "Alice falls into a fantastical world where she meets strange creatures and faces bizarre situations, ultimately learning more about herself."
-  },
-  {
-    "topic": "creative",
-    "instruction_type": "instructional",
-    "instruction": "How to brainstorm ideas for a fantasy novel?",
-    "input": "",
-    "response": "Start with a unique world concept, define the rules of magic, create complex characters, and think about central conflicts and themes."
-  },
-  {
-    "topic": "science",
+    "topic": "factual_qa",
     "instruction_type": "factual",
-    "instruction": "What planet is known as the Red Planet?",
+    "instruction": "Who developed the theory of relativity?",
     "input": "",
-    "response": "Mars is known as the Red Planet."
+    "response": "Albert Einstein developed the theory of relativity."
   },
   {
-    "topic": "science",
+    "topic": "creative_writing",
     "instruction_type": "creative",
-    "instruction": "Imagine and describe a new planet where gravity is reversed.",
+    "instruction": "Write a short story about a lonely robot.",
     "input": "",
-    "response": "On planet Gravitas, people walk on floating land masses tethered to the ground by magnetic ropes, and waterfalls rise instead of falling."
+    "response": "Once in a quiet corner of the galaxy, a robot named Theo wandered the stars in search of friendship..."
   },
   {
-    "topic": "science",
+    "topic": "creative_writing",
+    "instruction_type": "creative",
+    "instruction": "Compose a poem about the ocean at night.",
+    "input": "",
+    "response": "Beneath the stars, the ocean sighs,\nA mirror to the moonlit skies..."
+  },
+  {
+    "topic": "reasoning",
     "instruction_type": "reasoning",
-    "instruction": "Why do objects fall to the ground?",
+    "instruction": "Why do democratic systems often include checks and balances?",
     "input": "",
-    "response": "Objects fall due to gravity, a force that pulls them toward the center of the Earth."
+    "response": "Checks and balances prevent any one branch of government from becoming too powerful, ensuring accountability and fairness."
   },
   {
-    "topic": "science",
-    "instruction_type": "summarization",
-    "instruction": "Summarize Newton's three laws of motion.",
+    "topic": "reasoning",
+    "instruction_type": "reasoning",
+    "instruction": "Explain why the Earth has seasons.",
     "input": "",
-    "response": "1) Objects stay at rest or move uniformly unless acted on. 2) Force = mass * acceleration. 3) Every action has an equal and opposite reaction."
+    "response": "The Earth's tilt and its orbit around the sun cause varying sunlight angles, creating seasons."
   },
   {
-    "topic": "science",
+    "topic": "coding",
     "instruction_type": "instructional",
-    "instruction": "Explain how to safely conduct a vinegar and baking soda volcano experiment.",
+    "instruction": "Write a Python function that returns the factorial of a number.",
     "input": "",
-    "response": "Build a volcano shape, add baking soda inside, then pour vinegar slowly to cause a safe fizzy reaction that resembles an eruption."
+    "response": "def factorial(n):\n    return 1 if n == 0 else n * factorial(n-1)"
   },
   {
-    "topic": "history",
+    "topic": "coding",
+    "instruction_type": "instructional",
+    "instruction": "How do you create a dictionary in JavaScript?",
+    "input": "",
+    "response": "You can create a dictionary using an object literal: const myDict = { key: 'value' };"
+  },
+  {
+    "topic": "math",
+    "instruction_type": "reasoning",
+    "instruction": "Solve for x in the equation 3x + 9 = 18.",
+    "input": "",
+    "response": "Subtract 9 from both sides: 3x = 9. Then divide by 3: x = 3."
+  },
+  {
+    "topic": "math",
+    "instruction_type": "instructional",
+    "instruction": "Explain how to find the area of a triangle.",
+    "input": "",
+    "response": "Use the formula: area = (base * height) / 2."
+  },
+  {
+    "topic": "summarization",
+    "instruction_type": "summarization",
+    "instruction": "Summarize the plot of 'Romeo and Juliet'.",
+    "input": "",
+    "response": "Romeo and Juliet, two young lovers from feuding families, tragically die due to a series of misunderstandings."
+  },
+  {
+    "topic": "summarization",
+    "instruction_type": "summarization",
+    "instruction": "Summarize the causes of World War I.",
+    "input": "",
+    "response": "World War I was caused by nationalism, militarism, alliances, imperialism, and the assassination of Archduke Franz Ferdinand."
+  },
+  {
+    "topic": "translation",
+    "instruction_type": "translation",
+    "instruction": "Translate 'Good morning' into French.",
+    "input": "",
+    "response": "Bonjour"
+  },
+  {
+    "topic": "translation",
+    "instruction_type": "translation",
+    "instruction": "Translate 'Thank you very much' to Spanish.",
+    "input": "",
+    "response": "Muchas gracias"
+  },
+  {
+    "topic": "factual_qa",
     "instruction_type": "factual",
-    "instruction": "Who was the first president of the United States?",
+    "instruction": "When did the Berlin Wall fall?",
     "input": "",
-    "response": "George Washington was the first president of the United States."
+    "response": "The Berlin Wall fell on November 9, 1989."
   },
   {
-    "topic": "history",
+    "topic": "creative_writing",
     "instruction_type": "creative",
-    "instruction": "Write a diary entry from a soldier in World War I.",
+    "instruction": "Write a dialogue between the sun and the moon.",
     "input": "",
-    "response": "Nov 4, 1916: The trenches are cold and wet. I miss home terribly. Each day feels like a year, but we keep going, for each other and for peace."
+    "response": "\"You shine so brightly,\" said the moon. \"Only because you reflect my light,\" replied the sun with a wink."
   },
   {
-    "topic": "history",
+    "topic": "reasoning",
     "instruction_type": "reasoning",
-    "instruction": "Why did the Roman Empire fall?",
+    "instruction": "Why is water essential for life?",
     "input": "",
-    "response": "The fall was due to a combination of internal decay, economic troubles, military defeats, and invasions by barbarian tribes."
+    "response": "Water is a solvent in which biochemical reactions occur, and it's vital for regulating temperature and transporting nutrients in organisms."
   },
   {
-    "topic": "history",
-    "instruction_type": "summarization",
-    "instruction": "Summarize the key outcomes of the French Revolution.",
-    "input": "",
-    "response": "The monarchy was overthrown, a republic was established, and ideas of liberty, equality, and fraternity spread across Europe."
-  },
-  {
-    "topic": "history",
+    "topic": "coding",
     "instruction_type": "instructional",
-    "instruction": "How to analyze a primary historical source?",
+    "instruction": "Write a JavaScript function to reverse a string.",
     "input": "",
-    "response": "Identify the author, context, purpose, audience, and bias. Compare with other sources for a fuller picture of the event."
+    "response": "function reverseString(str) {\n  return str.split('').reverse().join('');\n}"
   },
   {
-    "topic": "health",
-    "instruction_type": "factual",
-    "instruction": "What vitamin is produced when the skin is exposed to sunlight?",
-    "input": "",
-    "response": "Vitamin D is produced when the skin is exposed to sunlight."
-  },
-  {
-    "topic": "health",
-    "instruction_type": "creative",
-    "instruction": "Write a motivational letter to someone starting their fitness journey.",
-    "input": "",
-    "response": "Dear Friend, Every step you take is a victory. Your journey won't be perfect, but it will be worth it. Stay strong and keep going!"
-  },
-  {
-    "topic": "health",
+    "topic": "math",
     "instruction_type": "reasoning",
-    "instruction": "Why is sleep important for mental health?",
+    "instruction": "What is the Pythagorean Theorem used for?",
     "input": "",
-    "response": "Sleep regulates mood, supports cognitive function, and helps the brain process emotions, all critical for mental well-being."
+    "response": "It's used to calculate the length of a side in a right triangle using the formula a\u00b2 + b\u00b2 = c\u00b2."
   },
   {
-    "topic": "health",
+    "topic": "summarization",
     "instruction_type": "summarization",
-    "instruction": "Summarize the benefits of regular exercise.",
+    "instruction": "Summarize the process of photosynthesis.",
     "input": "",
-    "response": "Regular exercise improves cardiovascular health, boosts mood, enhances sleep, strengthens muscles, and reduces stress."
+    "response": "Photosynthesis is the process where plants convert sunlight, carbon dioxide, and water into glucose and oxygen."
   },
   {
-    "topic": "health",
-    "instruction_type": "instructional",
-    "instruction": "How to practice mindful breathing?",
+    "topic": "translation",
+    "instruction_type": "translation",
+    "instruction": "Translate 'I love learning' to German.",
     "input": "",
-    "response": "Sit comfortably, inhale slowly through your nose, hold briefly, exhale gently through your mouth, and repeat while focusing on your breath."
-  },
-  {
-    "topic": "philosophy",
-    "instruction_type": "factual",
-    "instruction": "Who is known for the quote 'I think, therefore I am'?",
-    "input": "",
-    "response": "René Descartes is known for the quote 'I think, therefore I am'."
-  },
-  {
-    "topic": "philosophy",
-    "instruction_type": "creative",
-    "instruction": "Write a dialogue between a stoic and an existentialist.",
-    "input": "",
-    "response": "Stoic: 'Accept what you cannot control.' Existentialist: 'But meaning is something I must create, not accept blindly.'"
-  },
-  {
-    "topic": "philosophy",
-    "instruction_type": "reasoning",
-    "instruction": "Why is the question 'What is the meaning of life?' significant in philosophy?",
-    "input": "",
-    "response": "It reflects humanity's search for purpose and has sparked diverse perspectives from religion, science, and individual experience."
-  },
-  {
-    "topic": "philosophy",
-    "instruction_type": "summarization",
-    "instruction": "Summarize the main idea of utilitarianism.",
-    "input": "",
-    "response": "Utilitarianism holds that the best action maximizes overall happiness or utility for the greatest number of people."
-  },
-  {
-    "topic": "philosophy",
-    "instruction_type": "instructional",
-    "instruction": "How to practice philosophical thinking in daily life?",
-    "input": "",
-    "response": "Reflect regularly, question assumptions, engage in thoughtful dialogue, and explore diverse perspectives with curiosity."
+    "response": "Ich liebe das Lernen."
   }
 ]
