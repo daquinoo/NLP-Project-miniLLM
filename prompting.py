@@ -7,12 +7,20 @@ from few_shot_system import HybridTopicClassifier
 
 # Template for dynamic prompt construction
 # [TOPIC], [EXAMPLES], and [QUERY] are dynamically replaced with real content
-PROMPT_TEMPLATE = """Below are examples of [TOPIC] tasks:
+PROMPT_TEMPLATE_EXAMPLES_FIRST = """Below are examples of [TOPIC] tasks:
 
 [EXAMPLES]
 
 Now perform this new task:
 [QUERY]
+"""
+PROMPT_TEMPLATE_QUERY_FIRST = """You are given a task below:
+
+[QUERY]
+
+Here are similar examples:
+
+[EXAMPLES]
 """
 
 MODEL_NAME = "meta-llama/Llama-3.2-3B"
@@ -48,14 +56,28 @@ class ExampleDatabase:
         # Return all examples for a given topic
         return self.topic_index.get(topic, [])
 
-    def select_relevant_examples(self, query, topic, n=3):
+    # example selection for similarity (default), random, or diversity
+    def select_relevant_examples(self, query, topic, n=3, strategy = "similarity"):
         """
         Select top-n most semantically similar examples for a query within a topic.
         """
         all_examples = self.retrieve_examples(topic)
         if not all_examples:
             return []
+        # support for random and diversity strategies
+        if strategy == "random":
+            return np.random.choice(all_examples, size=min(n, len(all_examples)), replace=False).tolist()
 
+        if strategy == "diversity":
+            embeddings = self.model.encode([ex["instruction"] for ex in all_examples])
+            diverse_indices = [0]
+            while len(diverse_indices) < min(n, len(all_examples)):
+                remaining = [i for i in range(len(all_examples)) if i not in diverse_indices]
+                dists = [min(np.linalg.norm(embeddings[i] - embeddings[j]) for j in diverse_indices) for i in remaining]
+                diverse_indices.append(remaining[np.argmax(dists)])
+            return [all_examples[i] for i in diverse_indices]
+        
+        # OG similarity
         # Embed the query and example instructions
         query_embedding = self.model.encode(query, convert_to_tensor=True)
         example_embeddings = self.model.encode(
@@ -66,7 +88,8 @@ class ExampleDatabase:
         similarities = util.cos_sim(query_embedding, example_embeddings)[0]
         top_indices = similarities.argsort(descending=True)[:n]
         return [all_examples[i] for i in top_indices]
-
+    
+# constructs prompt based on chosen formats example first, query first, with/without explanation
 class PromptConstructor:
     """
     Handles prompt assembly using topic classification and example selection.
@@ -75,14 +98,19 @@ class PromptConstructor:
         self.example_db = example_db
         self.classifier = classifier
 
-    def format_examples(self, examples):
+    def format_examples(self, examples, with_explanations=False):
         # Format examples for insertion into prompt template
-        return "\n\n".join([
-            f"Instruction: {ex['instruction']}\nResponse: {ex['response']}"
-            for ex in examples
-        ])
+        # return "\n\n".join([
+        #     f"Instruction: {ex['instruction']}\nResponse: {ex['response']}"
+        #     for ex in examples
+        # ])
+        formatted = []
+        for ex in examples:
+            explanation = f"\nExplanation: {ex['explanation']}" if with_explanations and 'explanation' in ex else ""
+            formatted.append(f"Instruction: {ex['instruction']}\nResponse: {ex['response']}{explanation}")
+        return "\n\n".join(formatted)
 
-    def construct_prompt(self, query, topic=None):
+    def construct_prompt(self, query, topic=None, strategy="similarity", num_examples=3, prompt_format="examples_first", with_explanations=False):
         """
         Build a complete prompt with few-shot examples and the new query.
         Truncates examples if necessary to fit the model context window.
@@ -92,21 +120,34 @@ class PromptConstructor:
             topic, _ = self.classifier.classify(query)
 
         # Retrieve and format relevant examples
-        examples = self.example_db.select_relevant_examples(query, topic)
-        examples_text = self.format_examples(examples)
+        # examples = self.example_db.select_relevant_examples(query, topic)
+        # examples_text = self.format_examples(examples)
+
+        examples = self.example_db.select_relevant_examples(query, topic, n=num_examples, strategy=strategy)
+        examples_text = self.format_examples(examples, with_explanations=with_explanations)
 
         # Construct the prompt using the template
-        prompt = PROMPT_TEMPLATE.replace("[TOPIC]", topic)
-        prompt = prompt.replace("[EXAMPLES]", examples_text)
-        prompt = prompt.replace("[QUERY]", query)
+        if prompt_format == "query_first":
+            prompt = PROMPT_TEMPLATE_QUERY_FIRST.replace("[TOPIC]", topic)
+            prompt = prompt.replace("[QUERY]", query)
+            prompt = prompt.replace("[EXAMPLES]", examples_text)
+        else:
+            prompt = PROMPT_TEMPLATE_EXAMPLES_FIRST.replace("[TOPIC]", topic)
+            prompt = prompt.replace("[EXAMPLES]", examples_text)
+            prompt = prompt.replace("[QUERY]", query)
 
         # Ensure prompt fits within model context length
         while len(tokenizer.encode(prompt)) > MAX_LENGTH and len(examples) > 0:
             examples.pop()  # Remove least relevant
             examples_text = self.format_examples(examples)
-            prompt = PROMPT_TEMPLATE.replace("[TOPIC]", topic)
-            prompt = prompt.replace("[EXAMPLES]", examples_text)
-            prompt = prompt.replace("[QUERY]", query)
+            if prompt_format == "query_first":
+                prompt = PROMPT_TEMPLATE_QUERY_FIRST.replace("[TOPIC]", topic)
+                prompt = prompt.replace("[QUERY]", query)
+                prompt = prompt.replace("[EXAMPLES]", examples_text)
+            else:
+                prompt = PROMPT_TEMPLATE_EXAMPLES_FIRST.replace("[TOPIC]", topic)
+                prompt = prompt.replace("[EXAMPLES]", examples_text)
+                prompt = prompt.replace("[QUERY]", query)
 
         return prompt
 
