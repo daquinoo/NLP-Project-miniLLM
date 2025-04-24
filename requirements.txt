@@ -1,0 +1,16 @@
+transformers
+datasets
+peft
+accelerate
+bitsandbytes
+scipy
+huggingface_hub
+scikit-learn
+evaluate
+nltk
+rouge-score
+absl-py
+bert-score
+tensorboard
+fastapi
+uvicorn
