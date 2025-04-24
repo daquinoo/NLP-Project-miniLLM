@@ -57,6 +57,7 @@ print("Saved preprocessed data to CSV files")
 # Load preprocessed data
 train_df = pd.read_csv("train_data.csv")  
 test_df = pd.read_csv("test_data.csv")
+test_df = test_df.sample(n=1000, random_state=42)
 
 # ---------- ADDITIONAL DATA PREPARATION FOR DPO ----------
 # Here you would prepare paired preference data for DPO training
@@ -281,10 +282,11 @@ def get_training_args():
         per_device_train_batch_size=4,  # Batch size per GPU for training
         per_device_eval_batch_size=4,   # Batch size per GPU for evaluation
         gradient_accumulation_steps=8,  # Number of steps to accumulate gradients (effective batch size = batch_size * gradient_accumulation_steps)
-        evaluation_strategy="steps",    # Evaluate during training
-        eval_steps=500,                 # Evaluate every 500 steps
+        evaluation_strategy="no",    # Evaluate during training
+        # eval_steps=500,                 # Evaluate every 500 steps
         save_strategy="steps",          # Save during training
         save_steps=500,                 # Save every 500 steps
+        # eval_accumulation_steps=8,      # Split up evaluation to avoid OOM
         save_total_limit=3,             # Keep only the 3 most recent checkpoint
         # ---------- LEARNING RATE MODIFICATION (Nilay) ----------
         learning_rate=2e-5,           # Learning rate - typically higher for LoRA fine-tuning, change from default (2e-4) to whichever is preferred (1e-5 to 5e-5, or otherwise)
@@ -297,9 +299,9 @@ def get_training_args():
         report_to="tensorboard",        # Report to TensorBoard
         remove_unused_columns=False,    # Keep all columns
         push_to_hub=False,              # Don't push to HuggingFace Hub
-        load_best_model_at_end=True,    # Load the best model at the end of training
-        metric_for_best_model="eval_loss",  # Use evaluation loss as the metric for selecting the best model
-        greater_is_better=False,        # Lower loss is better
+        # load_best_model_at_end=True,    # Load the best model at the end of training
+        # metric_for_best_model="eval_loss",  # Use evaluation loss as the metric for selecting the best model
+        # greater_is_better=False,        # Lower loss is better
         # ---------- EARLY STOPPING IMPLEMENTATION (Nilay) ----------
         # Add early stopping parameters, examples below
         # early_stopping_patience=3,    # Default stop after 3 evaluations with no improvement
@@ -313,8 +315,8 @@ def get_training_args():
 # - EarlyStoppingCallback: stops training if no improvement in eval loss
 # - InferenceCallback (optional): logs model outputs on sample prompts during training
 def get_callbacks(tokenizer=None, val_texts=None):
-    callbacks = [EarlyStoppingCallback(early_stopping_patience=3)] # stop if no improvelemt for 3 evals
-    
+    # callbacks = [EarlyStoppingCallback(early_stopping_patience=3)] # stop if no improvelemt for 3 evals
+    callbacks = []
     # If sample prompts and tokenizer are provided, add inference logging
     if tokenizer and val_texts:
         callbacks.append(InferenceCallback(tokenizer, val_texts, log_steps=500))
@@ -348,17 +350,30 @@ def train():
         model=model,
         args=training_args,
         train_dataset=train_dataset,
-        eval_dataset=test_dataset,
+        # eval_dataset=test_dataset,
         tokenizer=tokenizer,
         data_collator=DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False),
         # ---------- ADD EVALUATION METRICS AND CALLBACKS ----------
-        compute_metrics=compute_metrics,  # Add the evaluation metrics
+        # compute_metrics=compute_metrics,  # Add the evaluation metrics
         callbacks=get_callbacks(tokenizer, val_examples),  # Add callbacks for early stopping and inference
     )
     
     # Start training
     print("Starting training...")
-    trainer.train()
+    trainer.train(resume_from_checkpoint="./output/llama-3.2-3b-alpaca-lora/checkpoint-3897")
+
+    print("Training complete. Running final evaluation on held-out test set...")
+
+    # Prepare eval dataset again (in case it's not already tokenized)
+    _, test_dataset = prepare_datasets(train_df, test_df)
+
+    # Run prediction and evaluation
+    eval_results = trainer.evaluate(eval_dataset=test_dataset)
+
+    print("\n=== Final Evaluation Metrics ===")
+    for k, v in eval_results.items():
+        print(f"{k}: {v:.4f}")
+
     
     # Save the model
     model.save_pretrained(OUTPUT_DIR)
