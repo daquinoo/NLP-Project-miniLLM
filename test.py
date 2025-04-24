@@ -13,7 +13,7 @@ import numpy as np
 
 # === Paths ===
 MODEL_NAME = "meta-llama/Llama-3.2-3B"
-CHECKPOINT_PATH = "output/llama-3.2-3b-alpaca-lora/checkpoint-2000"
+CHECKPOINT_PATH = "output/llama-3.2-3b-alpaca-lora/checkpoint-3897"
 TEST_CSV = "test_data.csv"
 
 # === Load tokenizer and model with LoRA ===

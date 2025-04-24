@@ -360,7 +360,7 @@ def train():
     
     # Start training
     print("Starting training...")
-    trainer.train(resume_from_checkpoint="./output/llama-3.2-3b-alpaca-lora/checkpoint-2500")
+    trainer.train(resume_from_checkpoint="./output/llama-3.2-3b-alpaca-lora/checkpoint-3897")
 
     print("Training complete. Running final evaluation on held-out test set...")
 

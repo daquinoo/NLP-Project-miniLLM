@@ -1,0 +1,149 @@
+[
+    {
+      "topic": "factual_qa",
+      "instruction_type": "factual",
+      "instruction": "What is the capital of Canada?",
+      "input": "",
+      "response": "The capital of Canada is Ottawa."
+    },
+    {
+      "topic": "factual_qa",
+      "instruction_type": "factual",
+      "instruction": "Who developed the theory of relativity?",
+      "input": "",
+      "response": "Albert Einstein developed the theory of relativity."
+    },
+    {
+      "topic": "creative_writing",
+      "instruction_type": "creative",
+      "instruction": "Write a short story about a lonely robot.",
+      "input": "",
+      "response": "Once in a quiet corner of the galaxy, a robot named Theo wandered the stars in search of friendship..."
+    },
+    {
+      "topic": "creative_writing",
+      "instruction_type": "creative",
+      "instruction": "Compose a poem about the ocean at night.",
+      "input": "",
+      "response": "Beneath the stars, the ocean sighs,\nA mirror to the moonlit skies..."
+    },
+    {
+      "topic": "reasoning",
+      "instruction_type": "reasoning",
+      "instruction": "Why do democratic systems often include checks and balances?",
+      "input": "",
+      "response": "Checks and balances prevent any one branch of government from becoming too powerful, ensuring accountability and fairness."
+    },
+    {
+      "topic": "reasoning",
+      "instruction_type": "reasoning",
+      "instruction": "Explain why the Earth has seasons.",
+      "input": "",
+      "response": "The Earth's tilt and its orbit around the sun cause varying sunlight angles, creating seasons."
+    },
+    {
+      "topic": "coding",
+      "instruction_type": "instructional",
+      "instruction": "Write a Python function that returns the factorial of a number.",
+      "input": "",
+      "response": "def factorial(n):\n    return 1 if n == 0 else n * factorial(n-1)"
+    },
+    {
+      "topic": "coding",
+      "instruction_type": "instructional",
+      "instruction": "How do you create a dictionary in JavaScript?",
+      "input": "",
+      "response": "You can create a dictionary using an object literal: const myDict = { key: 'value' };"
+    },
+    {
+      "topic": "math",
+      "instruction_type": "reasoning",
+      "instruction": "Solve for x in the equation 3x + 9 = 18.",
+      "input": "",
+      "response": "Subtract 9 from both sides: 3x = 9. Then divide by 3: x = 3."
+    },
+    {
+      "topic": "math",
+      "instruction_type": "instructional",
+      "instruction": "Explain how to find the area of a triangle.",
+      "input": "",
+      "response": "Use the formula: area = (base * height) / 2."
+    },
+    {
+      "topic": "summarization",
+      "instruction_type": "summarization",
+      "instruction": "Summarize the plot of 'Romeo and Juliet'.",
+      "input": "",
+      "response": "Romeo and Juliet, two young lovers from feuding families, tragically die due to a series of misunderstandings."
+    },
+    {
+      "topic": "summarization",
+      "instruction_type": "summarization",
+      "instruction": "Summarize the causes of World War I.",
+      "input": "",
+      "response": "World War I was caused by nationalism, militarism, alliances, imperialism, and the assassination of Archduke Franz Ferdinand."
+    },
+    {
+      "topic": "translation",
+      "instruction_type": "translation",
+      "instruction": "Translate 'Good morning' into French.",
+      "input": "",
+      "response": "Bonjour"
+    },
+    {
+      "topic": "translation",
+      "instruction_type": "translation",
+      "instruction": "Translate 'Thank you very much' to Spanish.",
+      "input": "",
+      "response": "Muchas gracias"
+    },
+    {
+      "topic": "factual_qa",
+      "instruction_type": "factual",
+      "instruction": "When did the Berlin Wall fall?",
+      "input": "",
+      "response": "The Berlin Wall fell on November 9, 1989."
+    },
+    {
+      "topic": "creative_writing",
+      "instruction_type": "creative",
+      "instruction": "Write a dialogue between the sun and the moon.",
+      "input": "",
+      "response": "\"You shine so brightly,\" said the moon. \"Only because you reflect my light,\" replied the sun with a wink."
+    },
+    {
+      "topic": "reasoning",
+      "instruction_type": "reasoning",
+      "instruction": "Why is water essential for life?",
+      "input": "",
+      "response": "Water is a solvent in which biochemical reactions occur, and it's vital for regulating temperature and transporting nutrients in organisms."
+    },
+    {
+      "topic": "coding",
+      "instruction_type": "instructional",
+      "instruction": "Write a JavaScript function to reverse a string.",
+      "input": "",
+      "response": "function reverseString(str) {\n  return str.split('').reverse().join('');\n}"
+    },
+    {
+      "topic": "math",
+      "instruction_type": "reasoning",
+      "instruction": "What is the Pythagorean Theorem used for?",
+      "input": "",
+      "response": "It's used to calculate the length of a side in a right triangle using the formula a\u00b2 + b\u00b2 = c\u00b2."
+    },
+    {
+      "topic": "summarization",
+      "instruction_type": "summarization",
+      "instruction": "Summarize the process of photosynthesis.",
+      "input": "",
+      "response": "Photosynthesis is the process where plants convert sunlight, carbon dioxide, and water into glucose and oxygen."
+    },
+    {
+      "topic": "translation",
+      "instruction_type": "translation",
+      "instruction": "Translate 'I love learning' to German.",
+      "input": "",
+      "response": "Ich liebe das Lernen."
+    }
+  ]
