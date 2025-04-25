@@ -100,46 +100,54 @@ class PromptConstructor:
 
     def format_examples(self, examples, with_explanations=False):
         # Format examples for insertion into prompt template
-        # return "\n\n".join([
-        #     f"Instruction: {ex['instruction']}\nResponse: {ex['response']}"
-        #     for ex in examples
-        # ])
         formatted = []
         for ex in examples:
             explanation = f"\nExplanation: {ex['explanation']}" if with_explanations and 'explanation' in ex else ""
             formatted.append(f"Instruction: {ex['instruction']}\nResponse: {ex['response']}{explanation}")
         return "\n\n".join(formatted)
 
-    def construct_prompt(self, query, topic=None, strategy="similarity", num_examples=3, prompt_format="examples_first", with_explanations=False):
+    def format_cot_examples(self, examples):
+        # Format examples with step-by-step reasoning for CoT prompting
+        formatted = []
+        for ex in examples:
+            if 'explanation' in ex:
+                formatted.append(f"Instruction: {ex['instruction']}\nReasoning: {ex['explanation']}\nResponse: {ex['response']}")
+            else:
+                # Fall back to non-CoT format if explanation is missing
+                formatted.append(f"Instruction: {ex['instruction']}\nResponse: {ex['response']}")
+        return "\n\n".join(formatted)
+
+    def construct_prompt(self, query, topic=None, strategy="similarity", num_examples=3, 
+                         prompt_format="examples_first", with_explanations=False, use_cot=False):
         """
         Build a complete prompt with few-shot examples and the new query.
         Truncates examples if necessary to fit the model context window.
+        
+        Parameters:
+        - query: The user's query
+        - topic: Topic classification (if None, will be automatically classified)
+        - strategy: How to select examples ("similarity", "random", "diversity")
+        - num_examples: Number of few-shot examples to include
+        - prompt_format: Format of the prompt ("examples_first" or "query_first")
+        - with_explanations: Whether to include explanations in examples
+        - use_cot: Whether to use Chain-of-Thought prompting
         """
         # Classify topic if not already provided
         if topic is None:
             topic, _ = self.classifier.classify(query)
 
-        # Retrieve and format relevant examples
-        # examples = self.example_db.select_relevant_examples(query, topic)
-        # examples_text = self.format_examples(examples)
-
+        # Retrieve examples
         examples = self.example_db.select_relevant_examples(query, topic, n=num_examples, strategy=strategy)
-        examples_text = self.format_examples(examples, with_explanations=with_explanations)
-
-        # Construct the prompt using the template
-        if prompt_format == "query_first":
-            prompt = PROMPT_TEMPLATE_QUERY_FIRST.replace("[TOPIC]", topic)
-            prompt = prompt.replace("[QUERY]", query)
+        
+        # Choose formatting based on whether we're using CoT
+        if use_cot:
+            examples_text = self.format_cot_examples(examples)
+            prompt = COT_PROMPT_TEMPLATE.replace("[TOPIC]", topic)
             prompt = prompt.replace("[EXAMPLES]", examples_text)
+            prompt = prompt.replace("[QUERY]", query)
         else:
-            prompt = PROMPT_TEMPLATE_EXAMPLES_FIRST.replace("[TOPIC]", topic)
-            prompt = prompt.replace("[EXAMPLES]", examples_text)
-            prompt = prompt.replace("[QUERY]", query)
-
-        # Ensure prompt fits within model context length
-        while len(tokenizer.encode(prompt)) > MAX_LENGTH and len(examples) > 0:
-            examples.pop()  # Remove least relevant
-            examples_text = self.format_examples(examples)
+            examples_text = self.format_examples(examples, with_explanations=with_explanations)
+            
             if prompt_format == "query_first":
                 prompt = PROMPT_TEMPLATE_QUERY_FIRST.replace("[TOPIC]", topic)
                 prompt = prompt.replace("[QUERY]", query)
@@ -149,7 +157,48 @@ class PromptConstructor:
                 prompt = prompt.replace("[EXAMPLES]", examples_text)
                 prompt = prompt.replace("[QUERY]", query)
 
+        # Ensure prompt fits within model context length
+        while len(tokenizer.encode(prompt)) > MAX_LENGTH and len(examples) > 0:
+            examples.pop()  # Remove least relevant
+            
+            if use_cot:
+                examples_text = self.format_cot_examples(examples)
+                prompt = COT_PROMPT_TEMPLATE.replace("[TOPIC]", topic)
+                prompt = prompt.replace("[EXAMPLES]", examples_text)
+                prompt = prompt.replace("[QUERY]", query)
+            else:
+                examples_text = self.format_examples(examples, with_explanations=with_explanations)
+                
+                if prompt_format == "query_first":
+                    prompt = PROMPT_TEMPLATE_QUERY_FIRST.replace("[TOPIC]", topic)
+                    prompt = prompt.replace("[QUERY]", query)
+                    prompt = prompt.replace("[EXAMPLES]", examples_text)
+                else:
+                    prompt = PROMPT_TEMPLATE_EXAMPLES_FIRST.replace("[TOPIC]", topic)
+                    prompt = prompt.replace("[EXAMPLES]", examples_text)
+                    prompt = prompt.replace("[QUERY]", query)
+
         return prompt
+
+    def extract_final_answer(self, response):
+        """
+        Extract the final answer from a Chain-of-Thought response.
+        This is a simple implementation that could be enhanced for better extraction.
+        """
+        # Look for common patterns that might indicate a final answer
+        indicators = [
+            "Therefore,", "Thus,", "So,", "Hence,", "In conclusion,", 
+            "The answer is", "The final answer is", "To conclude,"
+        ]
+        
+        lines = response.split('\n')
+        for i, indicator in enumerate(indicators):
+            for j, line in enumerate(lines):
+                if indicator in line:
+                    return line.split(indicator)[1].strip()
+        
+        # If no indicator found, return the last line as the answer
+        return lines[-1].strip()
 
 # For testing and demonstration only, will not run during imports
 if __name__ == "__main__":
