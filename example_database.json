@@ -145,5 +145,69 @@
     "instruction": "Translate 'I love learning' to German.",
     "input": "",
     "response": "Ich liebe das Lernen."
+  },
+  {
+    "topic": "factual_qa",
+    "instruction_type": "factual",
+    "instruction": "What is the capital of Canada?",
+    "input": "",
+    "response": "The capital of Canada is Ottawa.",
+    "explanation": "To find the capital of a country, I need to recall the official seat of government. For Canada, the capital city where the federal government is located is Ottawa, Ontario. It's different from the largest city (Toronto) or other major cities like Montreal or Vancouver."
+  },
+  {
+    "topic": "factual_qa",
+    "instruction_type": "factual",
+    "instruction": "Who developed the theory of relativity?",
+    "input": "",
+    "response": "Albert Einstein developed the theory of relativity.",
+    "explanation": "The theory of relativity consists of two related theories: special relativity and general relativity. Both were developed in the early 20th century. Looking at the major scientific figures from this period who worked on physics theories, Albert Einstein is the physicist who formulated both the special theory of relativity (1905) and the general theory of relativity (1915)."
+  },
+  {
+    "topic": "reasoning",
+    "instruction_type": "reasoning",
+    "instruction": "Why do democratic systems often include checks and balances?",
+    "input": "",
+    "response": "Checks and balances prevent any one branch of government from becoming too powerful, ensuring accountability and fairness.",
+    "explanation": "Let me think about this step by step:\n1. In democratic systems, power needs to be distributed to prevent tyranny.\n2. If one person or institution has too much power, they could potentially abuse it.\n3. Checks and balances divide power among different branches (typically executive, legislative, judicial).\n4. Each branch has some authority over the others: the legislative can override executive vetoes, courts can review laws, executives appoint judges.\n5. This creates a system where each branch 'checks' the others, maintaining a balance of power.\n6. The ultimate outcome is preventing consolidation of power while ensuring accountability."
+  },
+  {
+    "topic": "reasoning",
+    "instruction_type": "reasoning",
+    "instruction": "Explain why the Earth has seasons.",
+    "input": "",
+    "response": "The Earth's tilt and its orbit around the sun cause varying sunlight angles, creating seasons.",
+    "explanation": "Let me reason through why Earth has seasons:\n1. Earth rotates on its axis, which is tilted at approximately 23.5 degrees relative to its orbital plane.\n2. This tilt remains pointing in the same direction throughout the year as Earth orbits the Sun.\n3. During one part of the orbit, the northern hemisphere is tilted toward the Sun (summer in north, winter in south).\n4. Six months later, the northern hemisphere is tilted away from the Sun (winter in north, summer in south).\n5. When a hemisphere is tilted toward the Sun, sunlight hits it more directly and for longer periods each day.\n6. More direct sunlight means more concentrated solar energy and higher temperatures.\n7. The changing angle of sunlight, not the distance from the Sun, is what primarily causes seasons."
+  },
+  {
+    "topic": "math",
+    "instruction_type": "reasoning",
+    "instruction": "Solve for x in the equation 3x + 9 = 18.",
+    "input": "",
+    "response": "x = 3",
+    "explanation": "To solve for x in the equation 3x + 9 = 18, I'll follow these steps:\n1. First, I need to isolate the variable term by subtracting 9 from both sides:\n   3x + 9 - 9 = 18 - 9\n   3x = 9\n2. Now I need to isolate x by dividing both sides by 3:\n   3x ÷ 3 = 9 ÷ 3\n   x = 3\nTherefore, x = 3 is the solution."
+  },
+  {
+    "topic": "math",
+    "instruction_type": "instructional",
+    "instruction": "Explain how to find the area of a triangle.",
+    "input": "",
+    "response": "Use the formula: area = (base * height) / 2.",
+    "explanation": "To find the area of a triangle, I need to think through the following steps:\n1. First, identify the base of the triangle - this can be any of the three sides.\n2. Then find the height, which is the perpendicular distance from the base to the opposite vertex.\n3. Multiply the base length by the height.\n4. Divide this product by 2, resulting in the formula: area = (base * height) / 2.\n5. This formula works because a triangle is half of a rectangle with the same base and height.\nTherefore, the area of a triangle equals half the product of its base and height."
+  },
+  {
+    "topic": "reasoning",
+    "instruction_type": "reasoning",
+    "instruction": "Why is water essential for life?",
+    "input": "",
+    "response": "Water is a solvent in which biochemical reactions occur, and it's vital for regulating temperature and transporting nutrients in organisms.",
+    "explanation": "Let me analyze why water is essential for life:\n1. First, water is an excellent solvent - it can dissolve many different substances, which allows for biochemical reactions to occur in cells.\n2. Water molecules are polar, meaning they have a positive and negative end, allowing them to surround and separate other molecules.\n3. Water's high specific heat capacity means it can absorb and release large amounts of heat with minimal temperature change, helping organisms regulate their temperature.\n4. Water's cohesive properties allow for capillary action, enabling plants to transport water from roots to leaves and animals to transport nutrients through blood.\n5. Water participates directly in many metabolic reactions, including photosynthesis and cellular respiration.\n6. All known forms of life require water in liquid form for their cellular processes.\nFor these reasons, water is fundamentally necessary for life as we know it."
+  },
+  {
+    "topic": "coding",
+    "instruction_type": "reasoning",
+    "instruction": "Explain how a binary search algorithm works.",
+    "input": "",
+    "response": "Binary search efficiently finds values in sorted arrays by repeatedly dividing the search space in half, comparing the middle element to the target value.",
+    "explanation": "Let me walk through how binary search works step by step:\n1. First, binary search requires a sorted array as input.\n2. We initialize two pointers: 'left' at the beginning and 'right' at the end of the array.\n3. While left <= right, we calculate the middle index as (left + right) / 2.\n4. We compare the middle element with our target value.\n5. If they match, we've found our target and return its position.\n6. If the middle element is greater than our target, we update right = middle - 1 (search the left half).\n7. If the middle element is less than our target, we update left = middle + 1 (search the right half).\n8. We repeat steps 3-7 until we either find the target or exhaust the search space.\n9. The time complexity is O(log n) because we divide the search space in half with each step.\nThis algorithm is much more efficient than linear search (O(n)) for large sorted datasets."
   }
 ]
