@@ -13,7 +13,7 @@ PROMPT_TEMPLATE_EXAMPLES_FIRST = """Below are examples of [TOPIC] tasks:
 
 [EXAMPLES]
 
-Now perform this new task:
+Here is your task to answer directly:
 [QUERY]
 """
 PROMPT_TEMPLATE_QUERY_FIRST = """You are given a task below:
@@ -28,7 +28,7 @@ COT_PROMPT_TEMPLATE = """Below are examples of [TOPIC] tasks with step-by-step r
 
 [EXAMPLES]
 
-Now perform this new task:
+Your task is to answer the following question:
 [QUERY]
 Let's think through this step by step to reach the correct answer.
 """
