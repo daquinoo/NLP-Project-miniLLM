@@ -5,8 +5,7 @@ import argparse
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
-
-# Import your custom modules
+import re
 from few_shot_system import HybridTopicClassifier
 from prompting import PromptConstructor, ExampleDatabase
 from self_consistency import SelfConsistencyFramework
@@ -17,7 +16,7 @@ ADAPTER_PATH = "output/llama-3.2-3b-alpaca-lora"
 MAX_NEW_TOKENS = 200
 NUM_SAMPLES = 3  # For self-consistency
 DEFAULT_EXAMPLES = 3
-USE_SELF_CONSISTENCY = True  # Set to True to use self-consistency
+USE_SELF_CONSISTENCY = True  # To use self-consistency
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Generate predictions for test data")
@@ -188,8 +187,5 @@ def validate_output(input_path, output_path):
         print(f"Output validation failed: {str(e)}")
 
 if __name__ == "__main__":
-    # Add import for regex
-    import re
-    
     args = parse_args()
     process_test_data(args)
