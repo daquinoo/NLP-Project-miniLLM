@@ -22,6 +22,14 @@ Here are similar examples:
 
 [EXAMPLES]
 """
+COT_PROMPT_TEMPLATE = """Below are examples of [TOPIC] tasks with step-by-step reasoning:
+
+[EXAMPLES]
+
+Now perform this new task:
+[QUERY]
+Let's think through this step by step to reach the correct answer.
+"""
 
 MODEL_NAME = "meta-llama/Llama-3.2-3B"
 MAX_LENGTH = 2048  # Adjust this based on the actual model context window
