@@ -189,77 +189,77 @@ class PromptConstructor:
         return prompt
 
     def extract_final_answer(self, response):
-    """
-    Extract the final answer from Chain-of-Thought response.
-    Uses multiple strategies to identify the conclusion.
-    
-    Args:
-        response (str): The model's response including reasoning steps
+        """
+        Extract the final answer from Chain-of-Thought response.
+        Uses multiple strategies to identify the conclusion.
         
-    Returns:
-        str: The extracted final answer
-    """
-    if not response or response.isspace():
-        return "No answer provided"
-    
-    # Look for conclusion indicators
-    indicators = [
-        "Therefore,", "Thus,", "So,", "Hence,", "In conclusion,", 
-        "The answer is", "The final answer is", "To conclude,", "Finally,",
-        "This means", "We can conclude", "The result is", "The solution is"
-    ]
-    
-    # Check for the last occurrence of any indicator
-    last_indicator_pos = -1
-    last_indicator = None
-    
-    lines = response.split('\n')
-    for i, line in enumerate(lines):
-        for indicator in indicators:
-            if indicator.lower() in line.lower():
-                if i > last_indicator_pos:
-                    last_indicator_pos = i
-                    last_indicator = indicator
-    
-    # If we found an indicator, extract text after it
-    if last_indicator_pos >= 0:
-        line = lines[last_indicator_pos]
-        # Extract everything after the indicator
-        indicator_pos = line.lower().find(last_indicator.lower())
-        if indicator_pos >= 0:
-            extracted = line[indicator_pos + len(last_indicator):].strip()
-            if extracted:  # If there's content after the indicator
-                return extracted
-    
-    # Check for lines starting with "Answer:"
-    for line in reversed(lines):  # Start from the end
-        if line.lower().startswith("answer:"):
-            return line[7:].strip()
-    
-    # Check if the last paragraph is short (likely a conclusion)
-    non_empty_lines = [l for l in lines if l.strip()]
-    if non_empty_lines:
-        last_line = non_empty_lines[-1].strip()
-        # If the last line is short, it's likely a conclusion
-        if len(last_line) < 100 and not last_line.startswith("Let's") and not last_line.startswith("Step"):
-            return last_line
-    
-    # Look for the last sentence in the response
-    if response:
-        sentences = response.split('.')
-        if sentences:
-            # Get the last non-empty sentence
-            for sentence in reversed(sentences):
-                if sentence.strip():
-                    return sentence.strip()
-    
-    # Return last non-empty line
-    for line in reversed(lines):
-        if line.strip():
-            return line.strip()
-    
-    # Ultimate fallback
-    return response.strip()
+        Args:
+            response (str): The model's response including reasoning steps
+            
+        Returns:
+            str: The extracted final answer
+        """
+        if not response or response.isspace():
+            return "No answer provided"
+        
+        # Look for conclusion indicators
+        indicators = [
+            "Therefore,", "Thus,", "So,", "Hence,", "In conclusion,", 
+            "The answer is", "The final answer is", "To conclude,", "Finally,",
+            "This means", "We can conclude", "The result is", "The solution is"
+        ]
+        
+        # Check for the last occurrence of any indicator
+        last_indicator_pos = -1
+        last_indicator = None
+        
+        lines = response.split('\n')
+        for i, line in enumerate(lines):
+            for indicator in indicators:
+                if indicator.lower() in line.lower():
+                    if i > last_indicator_pos:
+                        last_indicator_pos = i
+                        last_indicator = indicator
+        
+        # If we found an indicator, extract text after it
+        if last_indicator_pos >= 0:
+            line = lines[last_indicator_pos]
+            # Extract everything after the indicator
+            indicator_pos = line.lower().find(last_indicator.lower())
+            if indicator_pos >= 0:
+                extracted = line[indicator_pos + len(last_indicator):].strip()
+                if extracted:  # If there's content after the indicator
+                    return extracted
+        
+        # Check for lines starting with "Answer:"
+        for line in reversed(lines):  # Start from the end
+            if line.lower().startswith("answer:"):
+                return line[7:].strip()
+        
+        # Check if the last paragraph is short (likely a conclusion)
+        non_empty_lines = [l for l in lines if l.strip()]
+        if non_empty_lines:
+            last_line = non_empty_lines[-1].strip()
+            # If the last line is short, it's likely a conclusion
+            if len(last_line) < 100 and not last_line.startswith("Let's") and not last_line.startswith("Step"):
+                return last_line
+        
+        # Look for the last sentence in the response
+        if response:
+            sentences = response.split('.')
+            if sentences:
+                # Get the last non-empty sentence
+                for sentence in reversed(sentences):
+                    if sentence.strip():
+                        return sentence.strip()
+        
+        # Return last non-empty line
+        for line in reversed(lines):
+            if line.strip():
+                return line.strip()
+        
+        # Ultimate fallback
+        return response.strip()
 
 # For testing and demonstration only, will not run during imports
 if __name__ == "__main__":
