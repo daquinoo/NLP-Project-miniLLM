@@ -1,11 +1,9 @@
 import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
 
 class HybridTopicClassifier:
     def __init__(self):
-        # Load sentence transformer model
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
         # Define topics with descriptions and keywords
         self.topics = {
             "factual_qa": {
@@ -37,11 +35,12 @@ class HybridTopicClassifier:
                 "keywords": ["translate", "conversion", "convert", "to french", "to spanish", "to english"]
             }
         }
-        # Compute embeddings
-        self.topic_embeddings = {
-            topic: self.model.encode(info["description"]) 
-            for topic, info in self.topics.items()
-        }
+        
+        # Create TF-IDF vectorizer for topic descriptions
+        self.vectorizer = TfidfVectorizer(ngram_range=(1, 2))
+        descriptions = [info["description"] for _, info in self.topics.items()]
+        self.topic_vectors = self.vectorizer.fit_transform(descriptions)
+        self.topic_names = list(self.topics.keys())
     
     def classify(self, query):
         # Keyword matching
@@ -51,12 +50,16 @@ class HybridTopicClassifier:
             for keyword in info["keywords"]:
                 if keyword.lower() in query_lower:
                     keyword_scores[topic] += 1
-        # Semantic similarity
-        query_embedding = self.model.encode(query)
+        
+        # TF-IDF similarity
+        query_vector = self.vectorizer.transform([query])
         similarity_scores = {}
-        for topic, topic_embedding in self.topic_embeddings.items():
-            similarity = cosine_similarity([query_embedding], [topic_embedding])[0][0]
-            similarity_scores[topic] = similarity
+        
+        # Calculate cosine similarity between query and each topic description
+        similarities = cosine_similarity(query_vector, self.topic_vectors)[0]
+        for idx, topic in enumerate(self.topic_names):
+            similarity_scores[topic] = similarities[idx]
+        
         # Combine scores (normalized keywords + similarity)
         max_keywords = max(keyword_scores.values()) if max(keyword_scores.values()) > 0 else 1
         combined_scores = {}
@@ -64,24 +67,11 @@ class HybridTopicClassifier:
             # Weight: 40% keywords, 60% similarity
             norm_keyword_score = keyword_scores[topic] / max_keywords
             combined_scores[topic] = 0.4 * norm_keyword_score + 0.6 * similarity_scores[topic]
-        # Find  best matching topic
+        
+        # Find best matching topic
         best_topic = max(combined_scores, key=combined_scores.get)
         confidence = combined_scores[best_topic]
         return best_topic, confidence
-
-# To be implemented
-class ExampleDatabase:
-    """
-    This class will handle loading, storing, and retrieving few-shot examples.
-    """
-    pass
-
-# To be implemented
-class PromptConstructor:
-    """
-    This class will handle constructing prompts with few-shot examples.
-    """
-    pass
 
 # Simple test to verify classifier functionality
 if __name__ == "__main__":
