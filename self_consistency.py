@@ -1,13 +1,15 @@
 import torch
-from collections import Counter
-from sentence_transformers import SentenceTransformer, util
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 class SelfConsistencyFramework:
     def __init__(self, model, tokenizer, prompt_constructor):
         self.model = model
         self.tokenizer = tokenizer
         self.prompt_constructor = prompt_constructor
-        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        # TF-IDF vectorizer for clustering similar answers
+        self.vectorizer = None  # Will be initialized on first use
     
     def generate_multiple_responses(self, query, topic=None, num_samples=5, 
                                    temperature_range=(0.7, 0.9), max_new_tokens=300):
@@ -59,7 +61,7 @@ class SelfConsistencyFramework:
     
     def cluster_similar_answers(self, answers, similarity_threshold=0.85):
         """
-        Group semantically similar answers together.
+        Group semantically similar answers together using TF-IDF.
         
         Args:
             answers (list): List of extracted final answers
@@ -68,14 +70,22 @@ class SelfConsistencyFramework:
         Returns:
             list: List of clusters, where each cluster is a list of similar answers
         """
-        if not answers:
-            return []
+        if not answers or len(answers) <= 1:
+            return [answers] if answers else []
         
-        # Encode all answers
-        embeddings = self.embedding_model.encode(answers, convert_to_tensor=True)
+        # Initialize vectorizer on first use
+        if self.vectorizer is None:
+            self.vectorizer = TfidfVectorizer(ngram_range=(1, 2))
+        
+        # Compute TF-IDF vectors
+        try:
+            vectors = self.vectorizer.fit_transform(answers)
+        except:
+            # Fallback in case of vectorization errors
+            return [answers]
         
         # Calculate pairwise similarities
-        similarities = util.cos_sim(embeddings, embeddings)
+        similarities = cosine_similarity(vectors)
         
         # Cluster similar answers
         clusters = []
