@@ -3,6 +3,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from prompting import PromptConstructor, ExampleDatabase, HybridTopicClassifier
 from peft import PeftModel
 import argparse
+from self_consistency import SelfConsistencyFramework
+from verification import AnswerVerifier
 
 MODEL_NAME = "meta-llama/Llama-3.2-3B"
 ADAPTER_PATH = "output/llama-3.2-3b-alpaca-lora"
@@ -11,6 +13,9 @@ MAX_NEW_TOKENS = 300
 def parse_args():
     parser = argparse.ArgumentParser(description="Few-shot prompting with optional chain-of-thought reasoning")
     parser.add_argument("--cot", action="store_true", help="Enable chain-of-thought reasoning")
+    parser.add_argument("--consistency", action="store_true", help="Enable self-consistency with multiple paths")
+    parser.add_argument("--verify", action="store_true", help="Enable answer verification")
+    parser.add_argument("--samples", type=int, default=5, help="Number of samples for self-consistency (default: 5)")
     parser.add_argument("--examples", type=int, default=3, help="Number of examples to use (default: 3)")
     parser.add_argument("--extract_answer", action="store_true", help="Extract final answer from CoT response")
     parser.add_argument("--temperature", type=float, default=0.7, help="Sampling temperature (default: 0.7)")
@@ -44,12 +49,25 @@ def main():
     db = ExampleDatabase()
     pc = PromptConstructor(db, classifier)
     
+    # Initialize enhanced components if needed
+    if args.consistency:
+        sc_framework = SelfConsistencyFramework(model, tokenizer, pc)
+    if args.verify:
+        verifier = AnswerVerifier()
+    
+    # Print configuration
     cot_status = "ENABLED" if args.cot else "DISABLED"
+    consistency_status = "ENABLED" if args.consistency else "DISABLED"
+    verify_status = "ENABLED" if args.verify else "DISABLED"
     extract_status = "ENABLED" if args.extract_answer else "DISABLED"
     
     print(f"\nWelcome to the Few-Shot Prompting System (LoRA-tuned) 🚀")
-    print(f"Chain-of-Thought: {cot_status} | Examples: {args.examples} | Answer Extraction: {extract_status}")
-    print(f"Temperature: {args.temperature} | Format: {args.format}\n")
+    print(f"Chain-of-Thought: {cot_status} | Self-Consistency: {consistency_status} | Verification: {verify_status}")
+    print(f"Examples: {args.examples} | Answer Extraction: {extract_status}")
+    print(f"Temperature: {args.temperature} | Format: {args.format}")
+    if args.consistency:
+        print(f"Samples for Self-Consistency: {args.samples}")
+    print("\n")
     
     while True:
         try:
@@ -61,40 +79,81 @@ def main():
             topic, confidence = classifier.classify(query)
             print(f"\nDetected topic: {topic} (confidence: {confidence:.2f})")
             
-            # Construct prompt with or without CoT
-            prompt = pc.construct_prompt(
-                query, 
-                topic=topic,
-                num_examples=args.examples,
-                prompt_format=args.format,
-                use_cot=args.cot
-            )
-            
-            print("\nConstructed Prompt:\n")
-            print(prompt)
-            
-            # Run inference
-            inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-            with torch.no_grad():
-                outputs = model.generate(
-                    **inputs,
-                    max_new_tokens=MAX_NEW_TOKENS,
-                    temperature=args.temperature,
-                    do_sample=args.temperature > 0,
-                    top_p=0.9
+            # Different processing paths based on configuration
+            if args.consistency:
+                # Full self-consistency pipeline
+                print(f"\nGenerating {args.samples} reasoning paths...")
+                results = sc_framework.generate_with_self_consistency(
+                    query, 
+                    topic=topic, 
+                    num_samples=args.samples
                 )
+                
+                print("\n=== Self-Consistency Results ===")
+                print(f"Final Answer: {results['final_answer']}")
+                print(f"Confidence: {results['confidence_level']} ({results['confidence_score']:.2f})")
+                
+                if args.verify:
+                    # Verify the answer against reasoning
+                    # Use the highest-confidence reasoning path
+                    best_reasoning = results['reasoning_paths'][0]
+                    verification = verifier.verify_answer(best_reasoning, results['final_answer'])
+                    
+                    print("\n=== Verification Results ===")
+                    print(f"Verification: {verification['verified']}")
+                    print(f"Reason: {verification['reason']}")
+                
+                # Option to show all reasoning paths
+                show_all = input("\nShow all reasoning paths? (y/n): ").lower() == 'y'
+                if show_all:
+                    for i, (path, answer) in enumerate(zip(results['reasoning_paths'], results['extracted_answers'])):
+                        print(f"\n--- Reasoning Path {i+1} ---")
+                        print(path)
+                        print(f"\nExtracted Answer: {answer}")
+                        print("-" * 40)
             
-            full_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-            model_response = full_response.replace(prompt, "").strip()
-            
-            print("\nModel Response:\n")
-            print(model_response)
-            
-            # Extract final answer if CoT is enabled and extraction is requested
-            if args.cot and args.extract_answer:
-                final_answer = pc.extract_final_answer(model_response)
-                print("\nExtracted Final Answer:\n")
-                print(final_answer)
+            else:
+                # Standard CoT or few-shot
+                prompt = pc.construct_prompt(
+                    query, 
+                    topic=topic,
+                    num_examples=args.examples,
+                    prompt_format=args.format,
+                    use_cot=args.cot
+                )
+                
+                print("\nConstructed Prompt:\n")
+                print(prompt)
+                
+                # Run inference
+                inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+                with torch.no_grad():
+                    outputs = model.generate(
+                        **inputs,
+                        max_new_tokens=MAX_NEW_TOKENS,
+                        temperature=args.temperature,
+                        do_sample=args.temperature > 0,
+                        top_p=0.9
+                    )
+                
+                full_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+                model_response = full_response.replace(prompt, "").strip()
+                
+                print("\nModel Response:\n")
+                print(model_response)
+                
+                # Handle answer extraction and verification
+                if args.cot:
+                    if args.extract_answer:
+                        final_answer = pc.extract_final_answer(model_response)
+                        print("\n=== Extracted Answer ===")
+                        print(final_answer)
+                        
+                        if args.verify:
+                            verification = verifier.verify_answer(model_response, final_answer)
+                            print("\n=== Verification Results ===")
+                            print(f"Verification: {verification['verified']}")
+                            print(f"Reason: {verification['reason']}")
             
             print("\n" + "="*60 + "\n")
             
