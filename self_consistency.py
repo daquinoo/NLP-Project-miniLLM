@@ -52,7 +52,7 @@ class SelfConsistencyFramework:
                     no_repeat_ngram_size=3  # Prevent repetitive outputs
                 )
             
-            # Decode and extract just the response (not the prompt)
+            # Decode and extract just the response
             full_response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             response = full_response.replace(prompt, "").strip()
             responses.append(response)
