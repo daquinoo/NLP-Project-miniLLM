@@ -1,8 +1,10 @@
 import json
 import numpy as np
-from sentence_transformers import SentenceTransformer, util
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoTokenizer
 
+# Import from your own module
 from few_shot_system import HybridTopicClassifier
 
 # Template for dynamic prompt construction
@@ -44,13 +46,28 @@ except Exception as e:
 class ExampleDatabase:
     """
     Loads and manages example data used for few-shot prompting.
-    Supports retrieval and similarity-based selection by topic.
+    Supports retrieval and TF-IDF similarity-based selection by topic.
     """
     def __init__(self, json_path="example_database.json"):
         with open(json_path, "r") as f:
             self.examples = json.load(f)
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')  # Embedding model
+        
+        # Organize examples by topic
         self.topic_index = self._index_by_topic()
+        
+        # Initialize TF-IDF vectorizers per topic (to avoid cross-topic comparison issues)
+        self.vectorizers = {}
+        self.example_vectors = {}
+        
+        # Precompute TF-IDF vectors for each topic
+        for topic, examples in self.topic_index.items():
+            if examples:
+                # Create vectorizer with bigrams for better semantic matching
+                self.vectorizers[topic] = TfidfVectorizer(ngram_range=(1, 2))
+                # Get instructions text for each example
+                instructions = [ex["instruction"] for ex in examples]
+                # Compute and store vectors
+                self.example_vectors[topic] = self.vectorizers[topic].fit_transform(instructions)
 
     def _index_by_topic(self):
         # Organize examples by topic into a dictionary
@@ -64,40 +81,77 @@ class ExampleDatabase:
         # Return all examples for a given topic
         return self.topic_index.get(topic, [])
 
-    # example selection for similarity (default), random, or diversity
-    def select_relevant_examples(self, query, topic, n=3, strategy = "similarity"):
+    def select_relevant_examples(self, query, topic, n=3, strategy="similarity"):
         """
-        Select top-n most semantically similar examples for a query within a topic.
+        Select examples for a query within a topic based on strategy.
+        Strategies: "similarity" (TF-IDF), "random", or "diversity"
         """
         all_examples = self.retrieve_examples(topic)
         if not all_examples:
             return []
-        # support for random and diversity strategies
+        
+        # Random selection strategy
         if strategy == "random":
             return np.random.choice(all_examples, size=min(n, len(all_examples)), replace=False).tolist()
-
-        if strategy == "diversity":
-            embeddings = self.model.encode([ex["instruction"] for ex in all_examples])
-            diverse_indices = [0]
-            while len(diverse_indices) < min(n, len(all_examples)):
-                remaining = [i for i in range(len(all_examples)) if i not in diverse_indices]
-                dists = [min(np.linalg.norm(embeddings[i] - embeddings[j]) for j in diverse_indices) for i in remaining]
-                diverse_indices.append(remaining[np.argmax(dists)])
-            return [all_examples[i] for i in diverse_indices]
         
-        # OG similarity
-        # Embed the query and example instructions
-        query_embedding = self.model.encode(query, convert_to_tensor=True)
-        example_embeddings = self.model.encode(
-            [ex["instruction"] for ex in all_examples], convert_to_tensor=True
-        )
-
-        # Compute cosine similarity and return top-n examples
-        similarities = util.cos_sim(query_embedding, example_embeddings)[0]
-        top_indices = similarities.argsort(descending=True)[:n]
+        # Diversity strategy (using TF-IDF vectors)
+        if strategy == "diversity":
+            if topic not in self.vectorizers:
+                return np.random.choice(all_examples, size=min(n, len(all_examples)), replace=False).tolist()
+            
+            # Start with a random example
+            selected_indices = [np.random.randint(0, len(all_examples))]
+            remaining_indices = list(set(range(len(all_examples))) - set(selected_indices))
+            
+            # Select examples maximizing diversity
+            while len(selected_indices) < min(n, len(all_examples)) and remaining_indices:
+                # Get vectors for selected examples
+                selected_vectors = self.example_vectors[topic][selected_indices]
+                
+                # Find example with maximum distance from already selected
+                max_min_dist = -1
+                next_idx = -1
+                
+                for i in remaining_indices:
+                    # Get vector for candidate example
+                    candidate_vector = self.example_vectors[topic][i]
+                    
+                    # Compute similarities with already selected examples
+                    sims = cosine_similarity(candidate_vector, selected_vectors)[0]
+                    
+                    # Get minimum similarity (maximum diversity)
+                    min_sim = min(sims)
+                    
+                    # Transform similarity to distance (1 - similarity)
+                    min_dist = 1 - min_sim
+                    
+                    if min_dist > max_min_dist:
+                        max_min_dist = min_dist
+                        next_idx = i
+                
+                if next_idx != -1:
+                    selected_indices.append(next_idx)
+                    remaining_indices.remove(next_idx)
+                else:
+                    break
+            
+            return [all_examples[i] for i in selected_indices]
+        
+        # Default: similarity-based selection using TF-IDF
+        if topic not in self.vectorizers:
+            return np.random.choice(all_examples, size=min(n, len(all_examples)), replace=False).tolist()
+        
+        # Transform query using the topic's vectorizer
+        query_vector = self.vectorizers[topic].transform([query])
+        
+        # Compute similarities with all examples in the topic
+        similarities = cosine_similarity(query_vector, self.example_vectors[topic])[0]
+        
+        # Get top-n examples
+        top_indices = similarities.argsort()[-n:][::-1]
         return [all_examples[i] for i in top_indices]
-    
-# constructs prompt based on chosen formats example first, query first, with/without explanation
+
+# PromptConstructor class (unchanged)
 class PromptConstructor:
     """
     Handles prompt assembly using topic classification and example selection.
@@ -130,15 +184,6 @@ class PromptConstructor:
         """
         Build a complete prompt with few-shot examples and the new query.
         Truncates examples if necessary to fit the model context window.
-        
-        Parameters:
-        - query: The user's query
-        - topic: Topic classification (if None, will be automatically classified)
-        - strategy: How to select examples ("similarity", "random", "diversity")
-        - num_examples: Number of few-shot examples to include
-        - prompt_format: Format of the prompt ("examples_first" or "query_first")
-        - with_explanations: Whether to include explanations in examples
-        - use_cot: Whether to use Chain-of-Thought prompting
         """
         # Classify topic if not already provided
         if topic is None:
@@ -192,12 +237,6 @@ class PromptConstructor:
         """
         Extract the final answer from Chain-of-Thought response.
         Uses multiple strategies to identify the conclusion.
-        
-        Args:
-            response (str): The model's response including reasoning steps
-            
-        Returns:
-            str: The extracted final answer
         """
         if not response or response.isspace():
             return "No answer provided"
