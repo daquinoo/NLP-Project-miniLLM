@@ -1,0 +1,10 @@
+__pycache__/
+.ipynb_checkpoints/
+output/
+.env
+
+llama3-tune.sif
+output_tester.py
+refusal_log.txt
+train_data.csv
+test_data.csv

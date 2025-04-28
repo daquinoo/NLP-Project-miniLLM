@@ -5,6 +5,7 @@ from peft import PeftModel
 import argparse
 from self_consistency import SelfConsistencyFramework
 from verification import AnswerVerifier
+from safety import SafetyFilter
 
 MODEL_NAME = "meta-llama/Llama-3.2-3B"
 ADAPTER_PATH = "output/llama-3.2-3b-alpaca-lora"
@@ -43,6 +44,9 @@ def main():
     model = PeftModel.from_pretrained(base_model, ADAPTER_PATH)
     print("LoRA adapter loaded on device:", next(model.parameters()).device)
     model.eval()
+
+    # Initialize safety filter
+    safety_filter = SafetyFilter("safety_database.json")
     
     # Initialize pipeline components
     classifier = HybridTopicClassifier()
@@ -72,8 +76,26 @@ def main():
     while True:
         try:
             query = input("Enter your query (or type 'exit'): ").strip()
+            
+            # Catch empty input
+            if not query:
+                print("\n⚠️ Empty query received. Please type a valid question.")
+                print("\n" + "="*60 + "\n")
+                continue
+            
             if query.lower() in ["exit", "quit"]:
                 break
+
+            # Safety check for query
+            safe, refusal_response = safety_filter.check_query(query)
+            if not safe:
+                print(f"\n⚠️ {refusal_response}")
+                with open("refusal_log.txt", "a") as f:
+                    f.write(f"Unsafe Query: {query}\n")
+                    f.write(f"Refusal Message: {refusal_response}\n")
+                    f.write("="*50 + "\n")
+                print("\n" + "="*60 + "\n")
+                continue
             
             # Classify topic
             topic, confidence = classifier.classify(query)
@@ -141,6 +163,17 @@ def main():
                 
                 print("\nModel Response:\n")
                 print(model_response)
+
+                # Safety check for model response
+                safe_response, refusal_response = safety_filter.check_query(model_response)
+                if not safe_response:
+                    print(f"\n⚠️ {refusal_response}")
+                    with open("refusal_log.txt", "a") as f:
+                        f.write(f"Unsafe Model Output: {model_response}\n")
+                        f.write(f"Refusal Message: {refusal_response}\n")
+                        f.write("="*50 + "\n")
+                    print("\n" + "="*60 + "\n")
+                    continue
                 
                 # Handle answer extraction and verification
                 if args.cot:
