@@ -138,11 +138,11 @@ def process_test_data(args):
         
         # Add to results
         predictions.append({"prediction": prediction})
+
+        # Save predictions
+        with open(args.output, "w") as f:
+            json.dump(predictions, f, indent=2)
     
-    # Save predictions
-    print(f"Saving predictions to {args.output}...")
-    with open(args.output, "w") as f:
-        json.dump(predictions, f, indent=2)
     
     # Validate format
     validate_output(args.input, args.output)

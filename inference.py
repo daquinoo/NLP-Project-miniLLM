@@ -9,7 +9,7 @@ from safety import SafetyFilter
 
 MODEL_NAME = "meta-llama/Llama-3.2-3B"
 ADAPTER_PATH = "output/llama-3.2-3b-alpaca-lora"
-MAX_NEW_TOKENS = 300
+MAX_NEW_TOKENS = 50
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Few-shot prompting with optional chain-of-thought reasoning")
