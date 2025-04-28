@@ -233,13 +233,41 @@ class PromptConstructor:
 
         return prompt
 
-    def extract_final_answer(self, response):
+    def extract_final_answer(self, response, query=None):
         """
         Extract the final answer from Chain-of-Thought response.
         Uses multiple strategies to identify the conclusion.
+        
+        Args:
+            response (str): The model's response
+            query (str): Optional original query to help identify relevant section
         """
         if not response or response.isspace():
             return "No answer provided"
+        
+        # First, try to find and isolate the section relevant to our query
+        if query:
+            query_lower = query.lower()
+            # Split by potential separators that might indicate new examples
+            sections = re.split(r'Now perform (?:this|the next) task:|Instruction:', response)
+            
+            if len(sections) > 1:
+                # Find the most relevant section
+                best_section = sections[0]  # Default to first section
+                best_score = 0
+                
+                for section in sections:
+                    # Simple relevance scoring based on keyword matches
+                    section_lower = section.lower()
+                    words = set(re.findall(r'\b\w+\b', query_lower))
+                    matches = sum(1 for word in words if word in section_lower)
+                    
+                    if matches > best_score:
+                        best_score = matches
+                        best_section = section
+                
+                # Replace the full response with just the relevant section
+                response = best_section
         
         # Look for conclusion indicators
         indicators = [
