@@ -243,7 +243,44 @@ class PromptConstructor:
             query (str): Optional original query to help identify relevant section
         """
         if not response or response.isspace():
-            return "No answer provided"
+        return "No answer provided"
+    
+        # Apply stopper if needed (handle model drift)
+        stop_phrases = ["Now perform", "Next task", "Next question", "Instruction:"]
+        for phrase in stop_phrases:
+            if phrase in response:
+                response = response.split(phrase)[0].strip()
+        
+        # SPECIAL HANDLING FOR MULTIPLE CHOICE QUESTIONS
+        # Look for option selection patterns
+        option_patterns = [
+            r'(?:answer|option|choice)(?:\s+is)?(?:\s*:)?\s*([A-D])',
+            r'(?:select|choose|pick)(?:\s+option)?(?:\s*:)?\s*([A-D])',
+            r'(?:correct|right)(?:\s+answer|option|choice)?(?:\s+is)?(?:\s*:)?\s*([A-D])',
+            r'(?:the)?\s*([A-D])(?:\s+is)(?:\s+the)(?:\s+correct|right|answer)',
+            r'(?:^|\s+|\.)([A-D])(?:\s*\.|\s*$|\s*,)',
+            r'→\s*([A-D])',
+            r'option\s*([A-D])',
+            r'\b([A-D])[\.:]'
+        ]
+        
+        for pattern in option_patterns:
+            match = re.search(pattern, response, re.IGNORECASE)
+            if match:
+                return match.group(1).upper()  # Return just the letter for multiple choice
+        
+        # For numerical answers, look for specific patterns
+        numeric_patterns = [
+            r'(?:answer|result|value)(?:\s+is)?(?:\s*:)?\s*(\d+)',
+            r'(?:=\s*)(\d+)(?:\s*\.|\s*$)',
+            r'(?:^|\s+|\.)(\d+)(?:\s*is\s*the\s*answer)',
+            r'(?:final\s*answer)(?:\s+is)?(?:\s*:)?\s*(\d+)'
+        ]
+        
+        for pattern in numeric_patterns:
+            match = re.search(pattern, response, re.IGNORECASE)
+            if match:
+                return match.group(1)
         
         # First, try to find and isolate the section relevant to our query
         if query:
