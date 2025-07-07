@@ -1,2 +1,2 @@
 # NLP-Project
-Project for NLP
+Fine-Tuned Local LLM project for CSE 476 - NLP
